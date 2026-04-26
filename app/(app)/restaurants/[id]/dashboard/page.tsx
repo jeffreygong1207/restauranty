@@ -65,9 +65,9 @@ export default async function RestaurantOwnerDashboard({
 
   const banner =
     search.claimed === "1"
-      ? "Claim submitted. Status is pending verification — you can manage everything below."
+      ? "Restaurant claimed and verified. You can manage everything below."
       : search.registered === "1"
-        ? "Restaurant registered. Status is pending verification — you can manage everything below."
+        ? "Restaurant registered and verified. You can manage everything below."
         : null;
 
   return (

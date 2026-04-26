@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PageHead, StatusBadge, WaitlistCandidateCard } from "@/components/restauranty-core";
 import { recoveryDetailData } from "@/lib/view-models";
 
@@ -17,7 +18,7 @@ export default async function WaitlistPage() {
               <div style={{ fontSize: 16, fontWeight: 600, marginTop: 2 }}>{data.diners.find((diner) => diner._id === data.rankedCandidates[0].dinerId)?.name} - priority {data.rankedCandidates[0].priorityScore}</div>
               <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>Party of {data.rankedCandidates[0].partySize} · {data.rankedCandidates[0].distanceMiles} mi away · {data.rankedCandidates[0].arrivalEtaMinutes} min ETA</div>
             </div>
-            <a className="btn accent" href={`/recovery/${data.reservation._id}`}>Approve refill</a>
+            <Link className="btn accent" href={`/recovery/${data.reservation._id}`}>Approve refill</Link>
           </div>
         </div>
       )}

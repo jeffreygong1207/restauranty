@@ -13,8 +13,9 @@ import {
   saveDiner,
   saveReservation,
 } from "@/lib/repositories/store";
+import { getSessionUser } from "@/lib/services/session";
 import { csvReservationRowSchema, reservationInputSchema } from "@/lib/validators";
-import type { Diner, Reservation } from "@/lib/types";
+import type { Diner, Reservation, User } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -31,22 +32,47 @@ export async function GET() {
   }
 }
 
-async function dinerForInput(input: {
-  dinerId?: string;
-  dinerName?: string;
-  dinerPhone?: string;
-  dinerEmail?: string;
-}) {
+async function dinerForInput(
+  input: {
+    dinerId?: string;
+    dinerName?: string;
+    dinerPhone?: string;
+    dinerEmail?: string;
+  },
+  user: User | null,
+) {
   if (input.dinerId) {
     const diner = await getDiner(input.dinerId);
     if (diner) return diner;
   }
+
+  if (user) {
+    const diners = await listDiners();
+    const linkEmail = (input.dinerEmail ?? user.email).toLowerCase();
+    const existing = diners.find(
+      (d) => d.userId === user._id || d.email.toLowerCase() === linkEmail,
+    );
+    if (existing) {
+      const next: Diner = {
+        ...existing,
+        userId: existing.userId ?? user._id,
+        name: input.dinerName ?? existing.name,
+        phone: input.dinerPhone ?? existing.phone,
+        email: input.dinerEmail ?? existing.email,
+        activeReservations: existing.activeReservations + 1,
+        updatedAt: isoNow(),
+      };
+      return saveDiner(next);
+    }
+  }
+
   const now = isoNow();
   const diner: Diner = {
     _id: id("diner"),
-    name: input.dinerName ?? "Guest Diner",
+    userId: user?._id,
+    name: input.dinerName ?? user?.name ?? "Guest Diner",
     phone: input.dinerPhone ?? "+10000000000",
-    email: input.dinerEmail ?? `guest-${Date.now()}@restauranty.demo`,
+    email: input.dinerEmail ?? user?.email ?? `guest-${Date.now()}@restauranty.demo`,
     verifiedHuman: false,
     noShowCount: 0,
     lateCancellationCount: 0,
@@ -77,7 +103,8 @@ export async function POST(request: Request) {
     const input = reservationInputSchema.parse(body);
     const restaurant = await getRestaurant(input.restaurantId);
     if (!restaurant) return Response.json({ ok: false, error: "Restaurant not found" }, { status: 404 });
-    const diner = await dinerForInput(input);
+    const user = await getSessionUser();
+    const diner = await dinerForInput(input, user);
     const policy = await getPolicyForRestaurant(restaurant._id);
     const now = isoNow();
     const base: Reservation = {
@@ -113,7 +140,7 @@ export async function POST(request: Request) {
     });
     await audit({
       actorType: "user",
-      actorId: "user_sofia",
+      actorId: user?._id ?? "user_sofia",
       action: "reservation_created",
       entityType: "reservation",
       entityId: reservation._id,

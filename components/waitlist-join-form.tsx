@@ -136,12 +136,15 @@ export function WaitlistJoinForm({
             <label>Phone</label>
             <input name="phone" defaultValue={defaultPhone} placeholder="+1 310 555 0100" />
           </div>
-          <div className="field" style={{ alignSelf: "end" }}>
-            <label className="row" style={{ gap: 6 }}>
-              <input type="checkbox" name="verifiedHuman" /> Human verified (World ID)
-            </label>
-          </div>
         </div>
+
+        <label
+          className="row"
+          style={{ gap: 8, marginTop: 14, alignItems: "center", fontSize: 13 }}
+        >
+          <input type="checkbox" name="verifiedHuman" />
+          Human verified (World ID)
+        </label>
 
         {error && (
           <div className="notice" style={{ marginTop: 12, color: "var(--danger)" }}>{error}</div>

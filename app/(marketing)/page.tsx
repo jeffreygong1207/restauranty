@@ -9,8 +9,14 @@ export default async function LandingPage() {
   const [user, data] = await Promise.all([getSessionUser(), dashboardData()]);
 
   const signedInTarget = user ? defaultLandingForRole(user.role) : null;
-  const heroPrimary = signedInTarget ?? "/api/auth/login?returnTo=/onboarding";
-  const heroPrimaryLabel = user ? `Open ${heroPrimary === "/restaurant-dashboard" ? "your dashboard" : "Restauranty"}` : "Get started";
+  const dinerSignup = user ? "/home" : authLoginUrl("/onboarding?intent=diner");
+  const ownerSignup = user
+    ? "/restaurant-dashboard"
+    : authLoginUrl("/onboarding?intent=owner");
+  const heroPrimary = signedInTarget ?? dinerSignup;
+  const heroPrimaryLabel = user
+    ? `Open ${heroPrimary === "/restaurant-dashboard" ? "your dashboard" : "Restauranty"}`
+    : "Sign up as a diner";
 
   const atRiskRows = data.rows
     .filter((row) => row.reservation.riskScore >= 50)
@@ -41,13 +47,18 @@ export default async function LandingPage() {
               Open Restauranty <Ic.arrow />
             </Link>
           ) : (
-            <a className="btn ghost sm" href={authLoginUrl("/onboarding")}>
-              Sign in
-            </a>
+            <>
+              <a className="btn ghost sm" href={authLoginUrl("/onboarding")}>
+                Sign in
+              </a>
+              <Link className="btn sm" href={dinerSignup}>
+                Diner sign up
+              </Link>
+              <Link className="btn sm primary" href={ownerSignup}>
+                Restaurant sign up
+              </Link>
+            </>
           )}
-          <Link className="btn sm primary" href="/restaurants/search">
-            Find your restaurant
-          </Link>
         </div>
       </div>
 
@@ -68,8 +79,8 @@ export default async function LandingPage() {
             <Link className="btn accent lg" href={heroPrimary}>
               {heroPrimaryLabel} <Ic.arrow />
             </Link>
-            <Link className="btn lg" href="/restaurants/search">
-              Search a restaurant
+            <Link className="btn lg" href={ownerSignup}>
+              {user ? "Restaurant dashboard" : "Sign up as a restaurant"}
             </Link>
           </div>
           <div className="row" style={{ marginTop: 24, gap: 14, color: "var(--ink-3)", fontSize: 12.5 }}>
@@ -139,8 +150,8 @@ export default async function LandingPage() {
             </ul>
           </div>
           <div className="card-foot">
-            <Link className="btn primary" href={user ? "/home" : authLoginUrl("/home")}>
-              Continue as a diner <Ic.arrow />
+            <Link className="btn primary" href={dinerSignup}>
+              {user ? "Open diner home" : "Sign up as a diner"} <Ic.arrow />
             </Link>
           </div>
         </div>
@@ -158,11 +169,8 @@ export default async function LandingPage() {
             </ul>
           </div>
           <div className="card-foot">
-            <Link
-              className="btn primary"
-              href={user ? "/restaurant-dashboard" : authLoginUrl("/restaurant-dashboard")}
-            >
-              Open restaurant dashboard <Ic.arrow />
+            <Link className="btn primary" href={ownerSignup}>
+              {user ? "Open restaurant dashboard" : "Sign up as a restaurant"} <Ic.arrow />
             </Link>
           </div>
         </div>

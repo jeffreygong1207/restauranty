@@ -19,6 +19,7 @@ const labels: Record<string, string> = {
   settings: "Settings",
   trust: "Trust Center",
   diner: "Diner Rescue",
+  dine: "Find a Table",
   home: "Diner Home",
   "my-reservations": "My Reservations",
   profile: "Profile",

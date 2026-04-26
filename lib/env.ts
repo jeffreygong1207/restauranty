@@ -17,8 +17,22 @@ export function boolEnv(key: FlagKey): boolean {
   return ["1", "true", "yes", "on"].includes(value.toLowerCase());
 }
 
+function normalizeBaseUrl(value: string | undefined) {
+  if (!value) return undefined;
+  const protocol = /^(localhost|127\.0\.0\.1|\[::1\])(?::|$)/.test(value) ? "http" : "https";
+  const withProtocol = /^https?:\/\//i.test(value) ? value : `${protocol}://${value}`;
+  return withProtocol.replace(/\/+$/, "");
+}
+
+function isLocalBaseUrl(value: string | undefined) {
+  return Boolean(value && /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::|\/|$)/i.test(value));
+}
+
 export function appBaseUrl() {
-  return raw("APP_BASE_URL") ?? raw("NEXT_PUBLIC_APP_URL") ?? "http://localhost:3000";
+  const configured = normalizeBaseUrl(raw("APP_BASE_URL")) ?? normalizeBaseUrl(raw("NEXT_PUBLIC_APP_URL"));
+  const vercel = normalizeBaseUrl(raw("VERCEL_PROJECT_PRODUCTION_URL")) ?? normalizeBaseUrl(raw("VERCEL_URL"));
+  if (isLocalBaseUrl(configured) && vercel) return vercel;
+  return configured ?? vercel ?? "http://localhost:3000";
 }
 
 export function hasMongoConfig() {

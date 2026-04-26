@@ -19,10 +19,16 @@ export const dynamic = "force-dynamic";
 
 export default async function MyReservationDetail({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ booked?: string }>;
 }) {
-  const [{ id }, user] = await Promise.all([params, getSessionUser()]);
+  const [{ id }, search, user] = await Promise.all([
+    params,
+    searchParams,
+    getSessionUser(),
+  ]);
   if (!user) redirect(authLoginUrl(`/my-reservations/${id}`));
 
   const reservation = await getReservation(id);
@@ -60,6 +66,12 @@ export default async function MyReservationDetail({
           </Link>
         }
       />
+
+      {search.booked === "1" && (
+        <div className="notice" style={{ marginBottom: 14 }}>
+          Reservation booked. We&apos;ve sent the confirmation request to the restaurant.
+        </div>
+      )}
 
       <div className="split">
         <div className="col" style={{ gap: 14 }}>
@@ -127,11 +139,11 @@ export default async function MyReservationDetail({
             </div>
           </div>
           <div className="card flat" style={{ background: "var(--bg-sunken)" }}>
-            <div className="card-body" style={{ fontSize: 12.5 }}>
+            <div className="card-body row" style={{ alignItems: "flex-start", gap: 10, fontSize: 12.5 }}>
               <Ic.shield />
-              <p style={{ margin: "8px 0 0" }}>
-                Releasing a table is free. Restauranty does not resell or markup reservations —
-                we route them through a verified waitlist with policies set by the restaurant.
+              <p style={{ margin: 0, color: "var(--ink-3)" }}>
+                Releasing a table is free. Restauranty does not resell or mark up reservations — we
+                route them through a verified waitlist with policies set by the restaurant.
               </p>
             </div>
           </div>

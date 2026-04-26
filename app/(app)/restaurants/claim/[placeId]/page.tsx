@@ -65,18 +65,23 @@ export default async function ClaimPage({
               <span className="k">Phone</span>
               <span className="v">{place?.phone ?? existing?.phone ?? "—"}</span>
             </div>
-            <div className="kv">
-              <span className="k">Website</span>
-              <span className="v">
-                {place?.website ?? existing?.website ? (
-                  <a href={place?.website ?? existing?.website} target="_blank" rel="noreferrer">
-                    Open
-                  </a>
-                ) : (
-                  "—"
-                )}
-              </span>
-            </div>
+            {(() => {
+              const website = place?.website ?? existing?.website;
+              return (
+                <div className="kv">
+                  <span className="k">Website</span>
+                  <span className="v">
+                    {website ? (
+                      <a href={website} target="_blank" rel="noreferrer">
+                        Open
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </span>
+                </div>
+              );
+            })()}
             <div className="kv">
               <span className="k">Rating</span>
               <span className="v">
@@ -130,7 +135,7 @@ export default async function ClaimPage({
                 <li>We persist this restaurant in MongoDB linked to your owner account.</li>
                 <li>A default reservation policy is created — you can fine-tune it later.</li>
                 <li>You land on the restaurant dashboard and can add reservations.</li>
-                <li>Status stays <i>Pending verification</i> until a Restauranty admin approves.</li>
+                <li>Your restaurant is verified instantly so you can start managing reservations.</li>
               </ol>
             </div>
           </div>

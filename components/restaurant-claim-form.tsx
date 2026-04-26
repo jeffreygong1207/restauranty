@@ -91,8 +91,8 @@ export function RestaurantClaimForm({
           />
         </div>
         <div className="notice" style={{ marginTop: 12 }}>
-          <b>Self-attested claim.</b> This restaurant will appear as <i>Pending verification</i>{" "}
-          until a Restauranty admin approves it. We never imply Google verified ownership.
+          <b>Self-attested claim.</b> Your restaurant is verified instantly so you can start
+          managing it. We never imply Google verified ownership.
         </div>
         {error && (
           <div className="notice" style={{ marginTop: 12, color: "var(--danger)" }}>{error}</div>

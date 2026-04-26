@@ -18,9 +18,9 @@ const ownerItems = [
 
 const dinerItems = [
   { href: "/home", label: "Home", icon: <Ic.overview /> },
+  { href: "/dine", label: "Find a Table", icon: <Ic.search /> },
   { href: "/my-reservations", label: "My Reservations", icon: <Ic.risk /> },
   { href: "/waitlist/join", label: "Join a Waitlist", icon: <Ic.waitlist /> },
-  { href: "/restaurants/search", label: "Find a Restaurant", icon: <Ic.search /> },
 ];
 
 const adminItems = [

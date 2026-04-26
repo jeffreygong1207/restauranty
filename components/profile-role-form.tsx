@@ -6,15 +6,15 @@ import { Ic } from "./restauranty-core";
 import type { UserRole } from "@/lib/types";
 
 const roles: { value: UserRole; label: string }[] = [
-  { value: "restaurant_manager", label: "Restaurant manager" },
   { value: "diner", label: "Diner" },
-  { value: "replacement_diner", label: "Replacement diner" },
+  { value: "restaurant_manager", label: "Restaurant manager" },
   { value: "admin", label: "Admin (demo only)" },
 ];
 
 export function ProfileRoleForm({ currentRole }: { currentRole: UserRole }) {
   const router = useRouter();
-  const [role, setRole] = useState<UserRole>(currentRole);
+  const initialRole: UserRole = currentRole === "replacement_diner" ? "diner" : currentRole;
+  const [role, setRole] = useState<UserRole>(initialRole);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -71,27 +71,30 @@ export default async function MyReservationsPage() {
               <Link
                 key={reservation._id}
                 href={`/my-reservations/${reservation._id}`}
-                className="kv"
+                className="row"
                 style={{
                   padding: "12px 0",
                   borderBottom: "1px solid var(--line)",
                   textDecoration: "none",
                   color: "inherit",
+                  gap: 12,
                 }}
               >
-                <span className="k" style={{ flex: 1 }}>
-                  <strong>{restaurant?.name ?? reservation.restaurantId}</strong>
-                  <div className="muted" style={{ fontSize: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong style={{ fontSize: 13.5 }}>
+                    {restaurant?.name ?? reservation.restaurantId}
+                  </strong>
+                  <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
                     {reservation.date} · {fmtTime(reservation.startTime)} · party of{" "}
                     {reservation.partySize} · {fmtMoney(reservation.estimatedRevenue)}
                   </div>
-                </span>
-                <span className="v" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <StatusBadge state={reservation.status}>
                     {reservation.status.replaceAll("_", " ")}
                   </StatusBadge>
                   <Ic.arrow />
-                </span>
+                </div>
               </Link>
             );
           })}
@@ -111,25 +114,26 @@ export default async function MyReservationsPage() {
               <Link
                 key={reservation._id}
                 href={`/my-reservations/${reservation._id}`}
-                className="kv"
+                className="row"
                 style={{
                   padding: "12px 0",
                   borderBottom: "1px solid var(--line)",
                   textDecoration: "none",
                   color: "inherit",
+                  gap: 12,
                 }}
               >
-                <span className="k" style={{ flex: 1 }}>
-                  <strong>{restaurant?.name ?? reservation.restaurantId}</strong>
-                  <div className="muted" style={{ fontSize: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong style={{ fontSize: 13.5 }}>
+                    {restaurant?.name ?? reservation.restaurantId}
+                  </strong>
+                  <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
                     {reservation.date} · {fmtTime(reservation.startTime)}
                   </div>
-                </span>
-                <span className="v">
-                  <StatusBadge state={reservation.status}>
-                    {reservation.status.replaceAll("_", " ")}
-                  </StatusBadge>
-                </span>
+                </div>
+                <StatusBadge state={reservation.status}>
+                  {reservation.status.replaceAll("_", " ")}
+                </StatusBadge>
               </Link>
             );
           })}

@@ -4,6 +4,7 @@ import { hasMongoConfig } from "./env";
 
 declare global {
   var __restaurantyMongoClient: Promise<MongoClient> | undefined;
+  var __restaurantyMongoWarning: string | undefined;
 }
 
 export async function getDb(): Promise<Db | null> {
@@ -11,10 +12,20 @@ export async function getDb(): Promise<Db | null> {
   const dbName = process.env.MONGODB_DB;
   if (!hasMongoConfig() || !uri || !dbName) return null;
   if (!global.__restaurantyMongoClient) {
-    global.__restaurantyMongoClient = new MongoClient(uri).connect();
+    global.__restaurantyMongoClient = new MongoClient(uri, {
+      serverSelectionTimeoutMS: 2500,
+      connectTimeoutMS: 2500,
+    }).connect();
   }
-  const client = await global.__restaurantyMongoClient;
-  return client.db(dbName);
+  try {
+    const client = await global.__restaurantyMongoClient;
+    return client.db(dbName);
+  } catch (error) {
+    global.__restaurantyMongoClient = undefined;
+    global.__restaurantyMongoWarning = error instanceof Error ? error.message : "MongoDB connection failed";
+    console.warn("MongoDB unavailable; using seeded demo fallback.", global.__restaurantyMongoWarning);
+    return null;
+  }
 }
 
 export async function requireDb(): Promise<Db> {

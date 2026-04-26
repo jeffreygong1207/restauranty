@@ -262,7 +262,7 @@ export function normalizePlaceToRestaurant(place: PlaceResult, ownerUserId?: str
     neighborhood: place.address.split(",")[1]?.trim() ?? "Los Angeles",
     ownerUserId,
     claimed: Boolean(ownerUserId),
-    claimStatus: ownerUserId ? "pending" : undefined,
+    claimStatus: ownerUserId ? "verified" : undefined,
     createdAt: now,
     updatedAt: now,
   };

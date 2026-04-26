@@ -48,14 +48,14 @@ export default async function DinerHomePage() {
     <div className="page">
       <PageHead
         title={`Hi ${user.name.split(" ")[0]}`}
-        subtitle="Manage your reservations, release tables responsibly, and join verified waitlists."
+        subtitle="Book reservations, manage upcoming tables, or release them so a waitlisted diner can take your spot."
         actions={
           <>
-            <Link className="btn" href="/restaurants/search">
-              <Ic.search /> Find a restaurant
-            </Link>
-            <Link className="btn primary" href="/waitlist/join">
+            <Link className="btn" href="/waitlist/join">
               <Ic.waitlist /> Join a waitlist
+            </Link>
+            <Link className="btn primary" href="/dine">
+              <Ic.search /> Find a table
             </Link>
           </>
         }
@@ -105,22 +105,30 @@ export default async function DinerHomePage() {
                 <Link
                   key={reservation._id}
                   href={`/my-reservations/${reservation._id}`}
-                  className="kv"
-                  style={{ textDecoration: "none", color: "inherit", padding: "10px 0", borderBottom: "1px solid var(--line)" }}
+                  className="row"
+                  style={{
+                    textDecoration: "none",
+                    color: "inherit",
+                    padding: "10px 0",
+                    borderBottom: "1px solid var(--line)",
+                    gap: 12,
+                  }}
                 >
-                  <span className="k" style={{ flex: 1 }}>
-                    <strong>{restaurant?.name ?? reservation.restaurantId}</strong>
-                    <div className="muted" style={{ fontSize: 12 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong style={{ fontSize: 13.5 }}>
+                      {restaurant?.name ?? reservation.restaurantId}
+                    </strong>
+                    <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
                       {reservation.date} · {fmtTime(reservation.startTime)} · party of{" "}
                       {reservation.partySize}
                     </div>
-                  </span>
-                  <span className="v" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <StatusBadge state={reservation.status}>
                       {reservation.status.replaceAll("_", " ")}
                     </StatusBadge>
                     <Ic.arrow />
-                  </span>
+                  </div>
                 </Link>
               );
             })}
@@ -159,6 +167,20 @@ export default async function DinerHomePage() {
             <div className="card-foot">
               <Link className="btn sm" href="/waitlist/join">
                 Join another waitlist
+              </Link>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-head">
+              <h3>Plans changing?</h3>
+            </div>
+            <div className="card-body col" style={{ gap: 10, fontSize: 13 }}>
+              <p className="muted" style={{ margin: 0 }}>
+                Don&apos;t ghost the restaurant — release your reservation and we&apos;ll refill it
+                from a verified waitlist. No fees, no resale, no markup.
+              </p>
+              <Link className="btn" href="/my-reservations">
+                Release a reservation
               </Link>
             </div>
           </div>
