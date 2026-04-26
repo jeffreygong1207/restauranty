@@ -135,43 +135,138 @@ export default async function LandingPage() {
         </div>
       </div>
 
-      <div id="diners" style={{ marginTop: 56, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, alignItems: "center" }}>
-        <div className="card">
-          <div className="card-body col" style={{ gap: 10, fontSize: 13.5 }}>
-            <h3 style={{ margin: 0 }}>For diners</h3>
-            <p className="muted" style={{ margin: 0 }}>
-              Free for diners — always. View your reservations, confirm or release responsibly,
-              and join verified waitlists when the place you want is full.
-            </p>
-            <ul style={{ margin: "8px 0 0 16px", padding: 0, color: "var(--ink-2)", fontSize: 13 }}>
-              <li>Confirm in one tap</li>
-              <li>Release without penalty when the restaurant policy allows it</li>
-              <li>Join waitlists with optional World ID verification</li>
-            </ul>
+      <div id="diners" style={{ marginTop: 64, marginBottom: 64 }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div className="sect-title" style={{ color: "var(--accent-deep)" }}>
+            Two sides, one fair table
           </div>
-          <div className="card-foot">
-            <Link className="btn primary" href={dinerSignup}>
-              {user ? "Open diner home" : "Sign up as a diner"} <Ic.arrow />
-            </Link>
-          </div>
+          <h2
+            style={{
+              fontSize: 28,
+              letterSpacing: "-0.025em",
+              margin: "6px 0 0",
+              fontWeight: 600,
+            }}
+          >
+            Built for diners and restaurants alike.
+          </h2>
         </div>
-        <div className="card">
-          <div className="card-body col" style={{ gap: 10, fontSize: 13.5 }}>
-            <h3 style={{ margin: 0 }}>For restaurants</h3>
-            <p className="muted" style={{ margin: 0 }}>
-              Claim your venue from Google Places, set your reservation policy, and watch
-              Restauranty triage tonight&apos;s book in real time.
-            </p>
-            <ul style={{ margin: "8px 0 0 16px", padding: 0, color: "var(--ink-2)", fontSize: 13 }}>
-              <li>Real-time risk monitor with deterministic scoring</li>
-              <li>Verified waitlist refill — no resale, no markup</li>
-              <li>Audit log + manager approvals on every recovery</li>
-            </ul>
+        <div className="grid-2" style={{ gap: 18, alignItems: "stretch" }}>
+          <div
+            className="card"
+            style={{ display: "flex", flexDirection: "column" }}
+          >
+            <div
+              className="card-body col"
+              style={{ gap: 12, fontSize: 13.5, flex: 1 }}
+            >
+              <div className="row" style={{ gap: 10, alignItems: "center" }}>
+                <span
+                  className="ic"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    display: "grid",
+                    placeItems: "center",
+                    borderRadius: 8,
+                    background: "var(--accent-soft)",
+                    color: "var(--accent-deep)",
+                  }}
+                >
+                  <Ic.diner />
+                </span>
+                <h3 style={{ margin: 0, fontSize: 16 }}>For diners</h3>
+              </div>
+              <p className="muted" style={{ margin: 0, lineHeight: 1.55 }}>
+                Free for diners — always. View your reservations, confirm or release
+                responsibly, and join verified waitlists when the place you want is full.
+              </p>
+              <ul
+                style={{
+                  margin: "4px 0 0",
+                  padding: 0,
+                  listStyle: "none",
+                  color: "var(--ink-2)",
+                  fontSize: 13,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <li className="row" style={{ gap: 8, alignItems: "flex-start" }}>
+                  <Ic.check /> Confirm in one tap
+                </li>
+                <li className="row" style={{ gap: 8, alignItems: "flex-start" }}>
+                  <Ic.check /> Release without penalty when the restaurant policy allows it
+                </li>
+                <li className="row" style={{ gap: 8, alignItems: "flex-start" }}>
+                  <Ic.check /> Join waitlists with optional World ID verification
+                </li>
+              </ul>
+            </div>
+            <div className="card-foot">
+              <Link className="btn primary" href={dinerSignup}>
+                {user ? "Open diner home" : "Sign up as a diner"} <Ic.arrow />
+              </Link>
+            </div>
           </div>
-          <div className="card-foot">
-            <Link className="btn primary" href={ownerSignup}>
-              {user ? "Open restaurant dashboard" : "Sign up as a restaurant"} <Ic.arrow />
-            </Link>
+          <div
+            className="card"
+            style={{ display: "flex", flexDirection: "column" }}
+          >
+            <div
+              className="card-body col"
+              style={{ gap: 12, fontSize: 13.5, flex: 1 }}
+            >
+              <div className="row" style={{ gap: 10, alignItems: "center" }}>
+                <span
+                  className="ic"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    display: "grid",
+                    placeItems: "center",
+                    borderRadius: 8,
+                    background: "var(--accent-soft)",
+                    color: "var(--accent-deep)",
+                  }}
+                >
+                  <Ic.shield />
+                </span>
+                <h3 style={{ margin: 0, fontSize: 16 }}>For restaurants</h3>
+              </div>
+              <p className="muted" style={{ margin: 0, lineHeight: 1.55 }}>
+                Claim your venue from Google Places, set your reservation policy, and watch
+                Restauranty triage tonight&apos;s book in real time.
+              </p>
+              <ul
+                style={{
+                  margin: "4px 0 0",
+                  padding: 0,
+                  listStyle: "none",
+                  color: "var(--ink-2)",
+                  fontSize: 13,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <li className="row" style={{ gap: 8, alignItems: "flex-start" }}>
+                  <Ic.check /> Real-time risk monitor with deterministic scoring
+                </li>
+                <li className="row" style={{ gap: 8, alignItems: "flex-start" }}>
+                  <Ic.check /> Verified waitlist refill — no resale, no markup
+                </li>
+                <li className="row" style={{ gap: 8, alignItems: "flex-start" }}>
+                  <Ic.check /> Audit log + manager approvals on every recovery
+                </li>
+              </ul>
+            </div>
+            <div className="card-foot">
+              <Link className="btn primary" href={ownerSignup}>
+                {user ? "Open restaurant dashboard" : "Sign up as a restaurant"} <Ic.arrow />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
