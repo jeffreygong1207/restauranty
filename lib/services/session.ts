@@ -51,7 +51,20 @@ export async function clearSession() {
 export async function getSessionUser(): Promise<User | null> {
   const session = await getSession();
   if (!session) return null;
-  return getUser(session.userId);
+  const existing = await getUser(session.userId);
+  if (existing) return existing;
+  const now = isoNow();
+  const recovered: User = {
+    _id: session.userId,
+    authProvider: session.authProvider,
+    authProviderId: `${session.authProvider}:${session.email.toLowerCase()}`,
+    email: session.email,
+    name: session.name,
+    role: session.role,
+    createdAt: now,
+    updatedAt: now,
+  };
+  return saveUser(recovered);
 }
 
 export function isAuth0Configured() {
