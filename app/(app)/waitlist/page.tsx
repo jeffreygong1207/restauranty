@@ -12,7 +12,7 @@ export default async function WaitlistPage() {
       {data?.rankedCandidates[0] && (
         <div className="card" style={{ marginBottom: 16, borderColor: "var(--accent)", background: "color-mix(in oklab, var(--accent-soft) 50%, var(--bg-elev))" }}>
           <div className="card-body row" style={{ gap: 14 }}>
-            <div className="cand av av-1" style={{ display: "grid", placeItems: "center", width: 44, height: 44, borderRadius: 12, color: "white", fontWeight: 600 }}>MC</div>
+            <div className="av av-1" style={{ display: "grid", placeItems: "center", width: 44, height: 44, borderRadius: 12, color: "white", fontWeight: 600 }}>MC</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent-deep)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Recommended replacement</div>
               <div style={{ fontSize: 16, fontWeight: 600, marginTop: 2 }}>{data.diners.find((diner) => diner._id === data.rankedCandidates[0].dinerId)?.name} - priority {data.rankedCandidates[0].priorityScore}</div>
