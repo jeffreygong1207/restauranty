@@ -1,16 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Ic } from "./restauranty-core";
 
 export function RestaurantRegisterForm({ signedIn }: { signedIn: boolean }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const busy = submitting || pending;
 
   async function submit(formData: FormData) {
-    setBusy(true);
+    setSubmitting(true);
     setError(null);
     const body = Object.fromEntries(formData.entries());
     if (body.averageCheck) body.averageCheck = Number(body.averageCheck) as never;
@@ -20,13 +22,15 @@ export function RestaurantRegisterForm({ signedIn }: { signedIn: boolean }) {
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    setBusy(false);
+    setSubmitting(false);
     if (!res.ok || !data.ok) {
       setError(data.error ?? "Registration failed.");
       return;
     }
-    router.push(`/restaurants/${data.restaurant._id}/dashboard?registered=1`);
-    router.refresh();
+    startTransition(() => {
+      router.push(`/restaurants/${data.restaurant._id}/dashboard?registered=1`);
+      router.refresh();
+    });
   }
 
   if (!signedIn) {
@@ -92,7 +96,9 @@ export function RestaurantRegisterForm({ signedIn }: { signedIn: boolean }) {
         {error && <div className="notice" style={{ marginTop: 12, color: "var(--danger)" }}>{error}</div>}
       </div>
       <div className="card-foot">
-        <button className="btn primary" disabled={busy}>{busy ? "Saving…" : "Register restaurant"}</button>
+        <button className="btn primary" disabled={busy}>
+          {submitting ? "Saving…" : pending ? "Opening dashboard…" : "Register restaurant"}
+        </button>
       </div>
     </form>
   );

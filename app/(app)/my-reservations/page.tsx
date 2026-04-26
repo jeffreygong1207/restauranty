@@ -16,8 +16,12 @@ import { authLoginUrl, getSessionUser } from "@/lib/services/session";
 
 export const dynamic = "force-dynamic";
 
-export default async function MyReservationsPage() {
-  const user = await getSessionUser();
+export default async function MyReservationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ booked?: string }>;
+}) {
+  const [user, search] = await Promise.all([getSessionUser(), searchParams]);
   if (!user) redirect(authLoginUrl("/my-reservations"));
 
   const [reservations, restaurants, diners] = await Promise.all([
@@ -55,6 +59,19 @@ export default async function MyReservationsPage() {
           </Link>
         }
       />
+
+      {search.booked && (
+        <div
+          className="notice"
+          style={{
+            marginBottom: 14,
+            background: "var(--accent-soft)",
+            color: "var(--accent-deep)",
+          }}
+        >
+          Reservation booked. We&apos;ve sent the confirmation request to the restaurant.
+        </div>
+      )}
 
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="card-head">

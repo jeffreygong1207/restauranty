@@ -5,6 +5,36 @@ import { hasMongoConfig } from "./env";
 declare global {
   var __restaurantyMongoClient: Promise<MongoClient> | undefined;
   var __restaurantyMongoWarning: string | undefined;
+  var __restaurantyAutoSeed: Promise<void> | undefined;
+}
+
+const AUTO_SEED_ENABLED = process.env.RESTAURANTY_AUTO_SEED !== "false";
+
+async function runAutoSeed(db: Db) {
+  try {
+    const { seedDataset } = await import("./seed/seed-data");
+    for (const [name, docs] of Object.entries(seedDataset)) {
+      const collectionName = COLLECTIONS[name as keyof typeof COLLECTIONS];
+      if (!collectionName || !Array.isArray(docs)) continue;
+      const ops = (docs as { _id: string }[]).map((doc) => ({
+        updateOne: {
+          filter: { _id: doc._id } as never,
+          update: { $setOnInsert: doc } as never,
+          upsert: true,
+        },
+      }));
+      if (ops.length) {
+        await db.collection<Record<string, unknown>>(collectionName).bulkWrite(ops, {
+          ordered: false,
+        });
+      }
+    }
+  } catch (error) {
+    console.warn(
+      "Auto-seed skipped:",
+      error instanceof Error ? error.message : error,
+    );
+  }
 }
 
 export async function getDb(): Promise<Db | null> {
@@ -19,7 +49,14 @@ export async function getDb(): Promise<Db | null> {
   }
   try {
     const client = await global.__restaurantyMongoClient;
-    return client.db(dbName);
+    const db = client.db(dbName);
+    if (AUTO_SEED_ENABLED && !global.__restaurantyAutoSeed) {
+      global.__restaurantyAutoSeed = runAutoSeed(db);
+    }
+    if (global.__restaurantyAutoSeed) {
+      await global.__restaurantyAutoSeed;
+    }
+    return db;
   } catch (error) {
     global.__restaurantyMongoClient = undefined;
     global.__restaurantyMongoWarning = error instanceof Error ? error.message : "MongoDB connection failed";

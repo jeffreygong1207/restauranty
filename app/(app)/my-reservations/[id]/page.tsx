@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import {
   Ic,
   PageHead,
@@ -32,7 +32,37 @@ export default async function MyReservationDetail({
   if (!user) redirect(authLoginUrl(`/my-reservations/${id}`));
 
   const reservation = await getReservation(id);
-  if (!reservation) notFound();
+  if (!reservation) {
+    return (
+      <div className="page" style={{ maxWidth: 720, margin: "0 auto" }}>
+        <PageHead
+          title="Reservation not found"
+          subtitle="This reservation isn't visible from this server yet — it may still be processing."
+          actions={
+            <Link className="btn primary" href="/my-reservations">
+              Back to all reservations
+            </Link>
+          }
+        />
+        <div className="card">
+          <div className="card-body col" style={{ gap: 10, fontSize: 13.5 }}>
+            <p style={{ margin: 0 }}>
+              If you just booked this table, it may take a moment to sync. Try refreshing or
+              return to your reservations list — the restaurant has already received the request.
+            </p>
+            <div className="row" style={{ gap: 8 }}>
+              <Link className="btn" href={`/my-reservations/${id}`}>
+                Refresh
+              </Link>
+              <Link className="btn" href="/my-reservations">
+                View all reservations
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [restaurant, diner] = await Promise.all([
     getRestaurant(reservation.restaurantId),
     getDiner(reservation.dinerId),

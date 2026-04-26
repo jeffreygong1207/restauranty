@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
 import { AgentRunLog, AuditLogTable, Card, PageHead, RecoveryTimeline, RiskFactors, StatusBadge, WaitlistCandidateCard, fmtMoney, fmtTime } from "@/components/restauranty-core";
 import { RecoveryActionPanel } from "@/components/recovery-action-panel";
 import { recoveryDetailData } from "@/lib/view-models";
@@ -8,7 +8,36 @@ export const dynamic = "force-dynamic";
 export default async function RecoveryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await recoveryDetailData(id);
-  if (!data) notFound();
+  if (!data) {
+    return (
+      <div className="page" style={{ maxWidth: 720, margin: "0 auto" }}>
+        <PageHead
+          title="Recovery flow not ready"
+          subtitle="This reservation isn't visible from this server yet — it may still be syncing."
+          actions={
+            <Link className="btn primary" href="/reservations">
+              Back to reservations
+            </Link>
+          }
+        />
+        <div className="card">
+          <div className="card-body col" style={{ gap: 10, fontSize: 13.5 }}>
+            <p style={{ margin: 0 }}>
+              If you just created or updated this reservation, give it a moment and refresh.
+            </p>
+            <div className="row" style={{ gap: 8 }}>
+              <Link className="btn" href={`/recovery/${id}`}>
+                Refresh
+              </Link>
+              <Link className="btn" href="/reservations">
+                View reservations
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="page">
       <PageHead title={`Recovery flow - ${data.restaurant.name} ${fmtTime(data.reservation.startTime)}`} subtitle="Risk, policy, waitlist ranking, fairness review, manager approval, settlement, and Agentverse status." actions={<StatusBadge state={data.recoveryRequest?.status ?? "waiting"}>{data.recoveryRequest?.status?.replaceAll("_", " ") ?? "Ready"}</StatusBadge>} />

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { AgentRunLog, AuditLogTable, Card, Ic, PageHead, RiskFactors, RiskScoreBadge, StatusBadge, fmtMoney, fmtTime } from "@/components/restauranty-core";
 import { RecoveryActionPanel } from "@/components/recovery-action-panel";
 import { reservationDetailData } from "@/lib/view-models";
@@ -9,7 +8,37 @@ export const dynamic = "force-dynamic";
 export default async function ReservationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await reservationDetailData(id);
-  if (!data) notFound();
+  if (!data) {
+    return (
+      <div className="page" style={{ maxWidth: 720, margin: "0 auto" }}>
+        <PageHead
+          title="Reservation not found"
+          subtitle="This reservation isn't visible from this server yet — it may still be syncing."
+          actions={
+            <Link className="btn primary" href="/reservations">
+              Back to all reservations
+            </Link>
+          }
+        />
+        <div className="card">
+          <div className="card-body col" style={{ gap: 10, fontSize: 13.5 }}>
+            <p style={{ margin: 0 }}>
+              If you just created this reservation, it may take a moment to appear. Refresh, or
+              return to the reservation table — the booking has already been recorded.
+            </p>
+            <div className="row" style={{ gap: 8 }}>
+              <Link className="btn" href={`/reservations/${id}`}>
+                Refresh
+              </Link>
+              <Link className="btn" href="/reservations">
+                View all reservations
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const circ = 2 * Math.PI * 90;
   const dash = (Math.max(0, Math.min(100, data.risk.score)) / 100) * circ;
   const riskColor =

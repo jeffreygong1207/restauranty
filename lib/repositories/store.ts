@@ -55,11 +55,21 @@ export function isoNow() {
   return new Date().toISOString();
 }
 
-async function list<T>(name: CollectionName, fallback: T[]): Promise<T[]> {
+async function list<T extends { _id: string }>(name: CollectionName, fallback: T[]): Promise<T[]> {
   const db = await getDb();
   if (!db) return fallback;
-  const docs = await db.collection(COLLECTIONS[name]).find({}).sort({ createdAt: -1 }).toArray();
-  return docs.length ? (docs as unknown as T[]) : fallback;
+  const docs = (await db
+    .collection(COLLECTIONS[name])
+    .find({})
+    .sort({ createdAt: -1 })
+    .toArray()) as unknown as T[];
+  if (!fallback.length) return docs;
+  const seen = new Set(docs.map((d) => d._id));
+  const merged = [...docs];
+  for (const item of fallback) {
+    if (!seen.has(item._id)) merged.push(item);
+  }
+  return merged;
 }
 
 async function findOne<T extends { _id: string }>(

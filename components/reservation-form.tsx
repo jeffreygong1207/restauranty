@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { Diner, Restaurant } from "@/lib/types";
 
 export function ReservationForm({
@@ -12,13 +12,15 @@ export function ReservationForm({
   diners: Diner[];
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const busy = submitting || pending;
   const firstRestaurant = restaurants[0]?._id ?? "";
   const firstDiner = diners[0]?._id ?? "";
 
   async function submit(formData: FormData) {
-    setBusy(true);
+    setSubmitting(true);
     setError(null);
     const body = Object.fromEntries(formData.entries());
     const res = await fetch("/api/reservations", {
@@ -27,13 +29,15 @@ export function ReservationForm({
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    setBusy(false);
+    setSubmitting(false);
     if (!res.ok || !data.ok) {
       setError(data.error ?? "Could not create reservation");
       return;
     }
-    router.push(`/reservations/${data.reservation._id}`);
-    router.refresh();
+    startTransition(() => {
+      router.push(`/reservations?created=${data.reservation._id}`);
+      router.refresh();
+    });
   }
 
   return (
@@ -109,7 +113,9 @@ export function ReservationForm({
         {error && <div className="notice" style={{ marginTop: 12, color: "var(--danger)" }}>{error}</div>}
       </div>
       <div className="card-foot">
-        <button className="btn primary" disabled={busy}>{busy ? "Creating..." : "Create reservation"}</button>
+        <button className="btn primary" disabled={busy}>
+          {submitting ? "Creating…" : pending ? "Loading reservations…" : "Create reservation"}
+        </button>
       </div>
     </form>
   );

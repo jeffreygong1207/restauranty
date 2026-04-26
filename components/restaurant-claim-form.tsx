@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Ic } from "./restauranty-core";
 
 export function RestaurantClaimForm({
@@ -16,11 +16,13 @@ export function RestaurantClaimForm({
   signedIn: boolean;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const busy = submitting || pending;
 
   async function submit(formData: FormData) {
-    setBusy(true);
+    setSubmitting(true);
     setError(null);
     const body = {
       placeId,
@@ -37,13 +39,15 @@ export function RestaurantClaimForm({
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    setBusy(false);
+    setSubmitting(false);
     if (!res.ok || !data.ok) {
       setError(data.error ?? "Claim failed.");
       return;
     }
-    router.push(`/restaurants/${data.restaurant._id}/dashboard?claimed=1`);
-    router.refresh();
+    startTransition(() => {
+      router.push(`/restaurants/${data.restaurant._id}/dashboard?claimed=1`);
+      router.refresh();
+    });
   }
 
   if (!signedIn) {
@@ -100,7 +104,11 @@ export function RestaurantClaimForm({
       </div>
       <div className="card-foot">
         <button className="btn primary" disabled={busy}>
-          {busy ? "Claiming…" : "Claim restaurant"}
+          {submitting
+            ? "Claiming…"
+            : pending
+              ? "Opening dashboard…"
+              : "Claim restaurant"}
         </button>
       </div>
     </form>

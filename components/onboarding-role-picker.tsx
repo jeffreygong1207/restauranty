@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Ic } from "./restauranty-core";
 import type { UserRole } from "@/lib/types";
 
@@ -49,11 +49,13 @@ export function OnboardingRolePicker({
   nextPath: string;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<UserRole | null>(null);
+  const [submitting, setSubmitting] = useState<UserRole | null>(null);
+  const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const busy = submitting !== null || pending;
 
   async function pick(role: UserRole) {
-    setBusy(role);
+    setSubmitting(role);
     setError(null);
     const res = await fetch("/api/users/role", {
       method: "POST",
@@ -61,14 +63,16 @@ export function OnboardingRolePicker({
       body: JSON.stringify({ role }),
     });
     const data = await res.json();
-    setBusy(null);
+    setSubmitting(null);
     if (!res.ok || !data.ok) {
       setError(data.error ?? "Could not update role.");
       return;
     }
     const target = nextPath && nextPath !== "/onboarding" ? nextPath : data.redirectTo;
-    router.push(target);
-    router.refresh();
+    startTransition(() => {
+      router.push(target);
+      router.refresh();
+    });
   }
 
   const isActive = (role: UserRole) => {
@@ -86,7 +90,7 @@ export function OnboardingRolePicker({
             type="button"
             className="card"
             onClick={() => pick(choice.role)}
-            disabled={Boolean(busy)}
+            disabled={busy}
             style={{
               textAlign: "left",
               cursor: busy ? "wait" : "pointer",
@@ -112,7 +116,12 @@ export function OnboardingRolePicker({
             </div>
             <div className="card-foot">
               <span className="btn sm primary">
-                {busy === choice.role ? "Saving…" : choice.cta} <Ic.arrow />
+                {submitting === choice.role
+                  ? "Saving…"
+                  : pending && active
+                    ? "Loading…"
+                    : choice.cta}{" "}
+                <Ic.arrow />
               </span>
             </div>
           </button>

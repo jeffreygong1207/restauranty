@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import {
   Ic,
   MetricCard,
@@ -29,7 +29,36 @@ export default async function RestaurantOwnerDashboard({
   const [{ id }, search, user] = await Promise.all([params, searchParams, getSessionUser()]);
   if (!user) redirect(`/api/auth/login?returnTo=${encodeURIComponent(`/restaurants/${id}/dashboard`)}`);
   const restaurant = await getRestaurant(id);
-  if (!restaurant) notFound();
+  if (!restaurant) {
+    return (
+      <div className="page" style={{ maxWidth: 720, margin: "0 auto" }}>
+        <PageHead
+          title="Restaurant not found"
+          subtitle="This venue isn't visible from this server yet — it may have just been claimed."
+          actions={
+            <Link className="btn primary" href="/restaurant-dashboard">
+              Back to my restaurants
+            </Link>
+          }
+        />
+        <div className="card">
+          <div className="card-body col" style={{ gap: 10, fontSize: 13.5 }}>
+            <p style={{ margin: 0 }}>
+              If you just claimed or registered this restaurant, give it a moment and refresh.
+            </p>
+            <div className="row" style={{ gap: 8 }}>
+              <Link className="btn" href={`/restaurants/${id}/dashboard`}>
+                Refresh
+              </Link>
+              <Link className="btn" href="/restaurant-dashboard">
+                My restaurants
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (restaurant.ownerUserId && restaurant.ownerUserId !== user._id && user.role !== "admin") {
     return (
       <div className="page">

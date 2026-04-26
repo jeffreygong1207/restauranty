@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Ic } from "./restauranty-core";
 
 const TIME_SLOTS = [
@@ -33,11 +33,13 @@ export function DinerBookingForm({
 }) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
-  const [busy, setBusy] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const busy = submitting || pending;
 
   async function submit(formData: FormData) {
-    setBusy(true);
+    setSubmitting(true);
     setError(null);
     const partySize = Number(formData.get("partySize") ?? 2);
     const body = {
@@ -62,13 +64,15 @@ export function DinerBookingForm({
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    setBusy(false);
+    setSubmitting(false);
     if (!res.ok || !data.ok) {
       setError(data.error ?? "Could not book this table.");
       return;
     }
-    router.push(`/my-reservations/${data.reservation._id}?booked=1`);
-    router.refresh();
+    startTransition(() => {
+      router.push(`/my-reservations?booked=${data.reservation._id}`);
+      router.refresh();
+    });
   }
 
   return (
@@ -120,7 +124,12 @@ export function DinerBookingForm({
       </div>
       <div className="card-foot">
         <button className="btn primary" disabled={busy}>
-          {busy ? "Reserving…" : "Book this table"} <Ic.arrow />
+          {submitting
+            ? "Reserving…"
+            : pending
+              ? "Opening your reservations…"
+              : "Book this table"}{" "}
+          <Ic.arrow />
         </button>
       </div>
     </form>

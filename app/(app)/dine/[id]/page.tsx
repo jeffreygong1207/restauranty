@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { PageHead, StatusBadge, fmtMoney } from "@/components/restauranty-core";
 import { DinerBookingForm } from "@/components/diner-booking-form";
 import { getRestaurant, listDiners } from "@/lib/repositories/store";
@@ -20,7 +20,36 @@ export default async function DineDetailPage({
   if (!user) redirect(authLoginUrl(`/dine/${id}`));
 
   const restaurant = await getRestaurant(id);
-  if (!restaurant) notFound();
+  if (!restaurant) {
+    return (
+      <div className="page" style={{ maxWidth: 720, margin: "0 auto" }}>
+        <PageHead
+          title="Restaurant not found"
+          subtitle="This venue isn't visible yet — it may have just been added."
+          actions={
+            <Link className="btn primary" href="/dine">
+              Back to browse
+            </Link>
+          }
+        />
+        <div className="card">
+          <div className="card-body col" style={{ gap: 10, fontSize: 13.5 }}>
+            <p style={{ margin: 0 }}>
+              If this restaurant was just claimed or registered, give it a moment and refresh.
+            </p>
+            <div className="row" style={{ gap: 8 }}>
+              <Link className="btn" href={`/dine/${id}`}>
+                Refresh
+              </Link>
+              <Link className="btn" href="/dine">
+                Browse restaurants
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const dinerProfile = diners.find(
     (d) => d.userId === user._id || d.email.toLowerCase() === user.email.toLowerCase(),
