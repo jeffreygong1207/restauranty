@@ -22,19 +22,22 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, error: "Invalid role" }, { status: 400 });
     }
     const role = body.role as UserRole;
-    const updated = await updateUserRole(session.userId, role);
+
+    const existing = await getSessionUser();
+    if (!existing) return Response.json({ ok: false, error: "Sign in required" }, { status: 401 });
+
+    const updated = await updateUserRole(existing._id, role);
     await setSession({ ...session, role });
 
-    const user = await getSessionUser();
     await audit({
       actorType: "user",
-      actorId: session.userId,
+      actorId: existing._id,
       action: "user_role_updated",
       entityType: "user",
-      entityId: session.userId,
+      entityId: existing._id,
       after: { role },
     });
-    return ok({ user: user ?? updated, redirectTo: defaultLandingForRole(role) });
+    return ok({ user: updated, redirectTo: defaultLandingForRole(role) });
   } catch (error) {
     return handleApiError(error);
   }

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { COLLECTIONS } from "@/lib/constants";
 import { getDb, ensureIndexes } from "@/lib/db";
 import {
@@ -69,7 +70,8 @@ async function findOne<T extends { _id: string }>(
   const db = await getDb();
   if (!db) return fallback.find((item) => item._id === _id) ?? null;
   const doc = await db.collection<Record<string, unknown>>(COLLECTIONS[name]).findOne({ _id } as never);
-  return (doc as T | null) ?? null;
+  if (doc) return doc as unknown as T;
+  return fallback.find((item) => item._id === _id) ?? null;
 }
 
 async function upsert<T extends { _id: string }>(name: CollectionName, item: T): Promise<T> {
@@ -119,9 +121,9 @@ export async function seedDatabase() {
   return { mode: "mongodb", inserted };
 }
 
-export async function listUsers() {
-  return list<User>("users", memory.users);
-}
+export const listUsers = cache(async () =>
+  list<User>("users", memory.users),
+);
 
 export async function getUser(_id: string) {
   return findOne<User>("users", memory.users, _id);
@@ -136,9 +138,9 @@ export async function saveUser(user: User) {
   return upsert<User>("users", user);
 }
 
-export async function listRestaurants() {
-  return list<Restaurant>("restaurants", memory.restaurants);
-}
+export const listRestaurants = cache(async () =>
+  list<Restaurant>("restaurants", memory.restaurants),
+);
 
 export async function listRestaurantsByOwner(ownerUserId: string) {
   const restaurants = await listRestaurants();
@@ -171,9 +173,9 @@ export async function saveRestaurantClaim(claim: RestaurantClaim) {
   return upsert<RestaurantClaim>("restaurantClaims", claim);
 }
 
-export async function listPolicies() {
-  return list<RestaurantPolicy>("restaurantPolicies", memory.restaurantPolicies);
-}
+export const listPolicies = cache(async () =>
+  list<RestaurantPolicy>("restaurantPolicies", memory.restaurantPolicies),
+);
 
 export async function getPolicyForRestaurant(restaurantId: string) {
   const policies = await listPolicies();
@@ -187,9 +189,9 @@ export async function savePolicy(policy: RestaurantPolicy) {
   return upsert<RestaurantPolicy>("restaurantPolicies", policy);
 }
 
-export async function listDiners() {
-  return list<Diner>("diners", memory.diners);
-}
+export const listDiners = cache(async () =>
+  list<Diner>("diners", memory.diners),
+);
 
 export async function getDiner(_id: string) {
   return findOne<Diner>("diners", memory.diners, _id);
@@ -199,9 +201,9 @@ export async function saveDiner(diner: Diner) {
   return upsert<Diner>("diners", diner);
 }
 
-export async function listReservations() {
-  return list<Reservation>("reservations", memory.reservations);
-}
+export const listReservations = cache(async () =>
+  list<Reservation>("reservations", memory.reservations),
+);
 
 export async function getReservation(_id: string) {
   return findOne<Reservation>("reservations", memory.reservations, _id);
@@ -226,9 +228,9 @@ export async function saveWaitlistCandidate(candidate: WaitlistCandidate) {
   return upsert<WaitlistCandidate>("waitlistCandidates", candidate);
 }
 
-export async function listRecoveryRequests() {
-  return list<RecoveryRequest>("recoveryRequests", memory.recoveryRequests);
-}
+export const listRecoveryRequests = cache(async () =>
+  list<RecoveryRequest>("recoveryRequests", memory.recoveryRequests),
+);
 
 export async function getRecoveryRequestByReservation(reservationId: string) {
   const requests = await listRecoveryRequests();
