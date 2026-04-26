@@ -804,6 +804,188 @@ export const seedSponsorEvents: SponsorEvent[] = [
   },
 ];
 
+// ---- Synthetic volume so the dashboard doesn't look empty ---------------
+
+const FIRST_NAMES = [
+  "Olivia", "Noah", "Emma", "Liam", "Ava", "Ethan", "Sophia", "Mason",
+  "Isabella", "Logan", "Mia", "Lucas", "Charlotte", "Jackson", "Amelia",
+  "Aiden", "Harper", "Elijah", "Evelyn", "James", "Abigail", "Benjamin",
+  "Emily", "Sebastian", "Madison", "Henry", "Scarlett", "Owen", "Aria",
+  "Daniel",
+];
+const LAST_NAMES = [
+  "Nguyen", "Patel", "Garcia", "Kim", "Cohen", "Rivera", "Brooks", "Morales",
+  "Lopez", "Reyes", "Wong", "Singh", "Khan", "Ramirez", "Bennett", "Carter",
+  "Diaz", "Torres", "Hayes", "Murphy", "Cruz", "Tran", "Foster", "Ortiz",
+  "Sullivan",
+];
+const CUISINE_BUCKETS = [
+  ["sushi", "japanese"],
+  ["italian", "pizza"],
+  ["mexican", "tacos"],
+  ["thai", "asian"],
+  ["mediterranean", "lebanese"],
+  ["american", "burgers"],
+  ["persian", "mediterranean"],
+];
+
+const DAY_MS = 86_400_000;
+function dayOffset(deltaDays: number) {
+  const base = new Date("2026-04-26T00:00:00.000Z").getTime();
+  return new Date(base + deltaDays * DAY_MS).toISOString().slice(0, 10);
+}
+
+const TIME_SLOTS = ["17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"];
+
+const SYNTHETIC_RESTAURANT_IDS = seedRestaurants.map((r) => r._id);
+
+const extraDiners: Diner[] = Array.from({ length: 30 }, (_, i) => {
+  const first = FIRST_NAMES[i % FIRST_NAMES.length];
+  const last = LAST_NAMES[(i * 7 + 3) % LAST_NAMES.length];
+  const completed = ((i * 13) % 25) + 1;
+  const noShows = i % 11 === 0 ? 2 : i % 6 === 0 ? 1 : 0;
+  const lateCancels = i % 8 === 0 ? 2 : i % 4 === 0 ? 1 : 0;
+  const trust = Math.max(35, Math.min(98, 95 - noShows * 18 - lateCancels * 6 + (completed > 10 ? 4 : 0)));
+  return {
+    _id: `diner_synth_${i}`,
+    name: `${first} ${last}`,
+    phone: `+1310555${String(2000 + i).padStart(4, "0")}`,
+    email: `${first.toLowerCase()}.${last.toLowerCase()}@example.com`,
+    verifiedHuman: i % 3 !== 0,
+    worldIdNullifierHash: i % 3 !== 0 ? `synth_nullifier_${i}` : undefined,
+    noShowCount: noShows,
+    lateCancellationCount: lateCancels,
+    completedReservations: completed,
+    activeReservations: i % 5 === 0 ? 2 : 1,
+    trustScore: trust,
+    preferredCuisines: CUISINE_BUCKETS[i % CUISINE_BUCKETS.length],
+    homeCoordinates: { lat: 34.06 + (i % 7) * 0.01, lng: -118.44 + (i % 5) * 0.01 },
+    ...stamp,
+  };
+});
+
+const ALL_DINER_IDS = [
+  ...seedDiners.map((d) => d._id),
+  ...extraDiners.map((d) => d._id),
+];
+
+function syntheticReservation(index: number): Reservation {
+  const restaurantId = SYNTHETIC_RESTAURANT_IDS[index % SYNTHETIC_RESTAURANT_IDS.length];
+  const dinerId = ALL_DINER_IDS[(index * 11) % ALL_DINER_IDS.length];
+  const dayDelta = ((index * 5) % 21) - 7; // -7..+13 days
+  const date = dayOffset(dayDelta);
+  const startTime = TIME_SLOTS[index % TIME_SLOTS.length];
+  const partySize = 2 + (index % 5);
+
+  // status distribution by dayDelta
+  let status: Reservation["status"];
+  let confirmationStatus: Reservation["confirmationStatus"];
+  let riskScore: number;
+  let riskLevel: Reservation["riskLevel"];
+  let recommendedAction: string;
+  let recoveryStatus: string | undefined;
+
+  if (dayDelta < -1) {
+    const past = index % 9;
+    if (past <= 5) {
+      status = "completed";
+      confirmationStatus = "confirmed";
+      riskScore = 12 + (index % 18);
+      riskLevel = "low";
+      recommendedAction = "completed";
+    } else if (past === 6 || past === 7) {
+      status = "cancelled";
+      confirmationStatus = "declined";
+      riskScore = 40 + (index % 25);
+      riskLevel = "medium";
+      recommendedAction = "released";
+    } else {
+      status = "no_show";
+      confirmationStatus = "ignored";
+      riskScore = 80 + (index % 15);
+      riskLevel = "high";
+      recommendedAction = "post-mortem";
+    }
+  } else if (dayDelta === 0) {
+    const today = index % 6;
+    if (today < 2) {
+      status = "unconfirmed";
+      confirmationStatus = "ignored";
+      riskScore = 60 + (index % 35);
+      riskLevel = riskScore >= 85 ? "critical" : "high";
+      recommendedAction = riskScore >= 85
+        ? "activate waitlist recovery"
+        : "send final confirmation";
+      recoveryStatus = riskScore >= 85 ? "ready" : "monitoring";
+    } else if (today < 4) {
+      status = "confirmed";
+      confirmationStatus = "confirmed";
+      riskScore = 10 + (index % 25);
+      riskLevel = "low";
+      recommendedAction = "hold";
+    } else {
+      status = "scheduled";
+      confirmationStatus = "requested";
+      riskScore = 30 + (index % 30);
+      riskLevel = "medium";
+      recommendedAction = "monitor";
+    }
+  } else {
+    const upcoming = index % 4;
+    if (upcoming === 0) {
+      status = "confirmed";
+      confirmationStatus = "confirmed";
+      riskScore = 8 + (index % 20);
+      riskLevel = "low";
+      recommendedAction = "hold";
+    } else {
+      status = "scheduled";
+      confirmationStatus = upcoming === 1 ? "requested" : "not_requested";
+      riskScore = 20 + (index % 35);
+      riskLevel = riskScore >= 50 ? "medium" : "low";
+      recommendedAction = "hold";
+    }
+  }
+
+  const restaurant = seedRestaurants.find((r) => r._id === restaurantId);
+  const averageCheck = restaurant?.averageCheck ?? 65;
+  const estimatedRevenue = Math.round(averageCheck * partySize);
+  const bookedDelta = dayDelta - (3 + (index % 6));
+  const bookedAt = `${dayOffset(bookedDelta)}T${TIME_SLOTS[(index + 1) % TIME_SLOTS.length]}:00.000Z`;
+
+  return {
+    _id: `res_synth_${index}`,
+    restaurantId,
+    dinerId,
+    source: "seed",
+    date,
+    startTime,
+    partySize,
+    status,
+    confirmationStatus,
+    reminderOpened: index % 4 !== 0,
+    priorLateCancellationsAtBooking: index % 7 === 0 ? 1 : 0,
+    priorNoShowsAtBooking: index % 13 === 0 ? 1 : 0,
+    cardOnFile: index % 3 !== 0,
+    bookedAt,
+    highDemandSlot: ["19:00", "19:30", "20:00", "20:30"].includes(startTime),
+    estimatedRevenue,
+    cancellationFee: index % 5 === 0 ? 40 : 0,
+    riskScore,
+    riskLevel,
+    recommendedAction,
+    recoveryStatus,
+    ...stamp,
+  };
+}
+
+const extraReservations: Reservation[] = Array.from({ length: 180 }, (_, i) =>
+  syntheticReservation(i),
+);
+
+seedDiners.push(...extraDiners);
+seedReservations.push(...extraReservations);
+
 export const seedDataset = {
   users: seedUsers,
   restaurants: seedRestaurants,

@@ -11,7 +11,13 @@ export default async function ReservationDetailPage({ params }: { params: Promis
   const data = await reservationDetailData(id);
   if (!data) notFound();
   const circ = 2 * Math.PI * 90;
-  const dash = (data.risk.score / 100) * circ;
+  const dash = (Math.max(0, Math.min(100, data.risk.score)) / 100) * circ;
+  const riskColor =
+    data.risk.level === "high"
+      ? "var(--risk-high)"
+      : data.risk.level === "medium"
+        ? "var(--risk-med)"
+        : "var(--risk-low)";
   return (
     <div className="page">
       <PageHead
@@ -57,12 +63,12 @@ export default async function ReservationDetailPage({ params }: { params: Promis
               <div className="score-viz">
                 <svg width="220" height="220" viewBox="0 0 220 220">
                   <circle cx="110" cy="110" r="90" fill="none" stroke="var(--bg-sunken)" strokeWidth="14" />
-                  <circle cx="110" cy="110" r="90" fill="none" stroke="var(--risk-high)" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${dash} ${circ}`} />
+                  <circle cx="110" cy="110" r="90" fill="none" stroke={riskColor} strokeWidth="14" strokeLinecap="round" strokeDasharray={`${dash} ${circ}`} />
                 </svg>
                 <div className="center">
                   <div className="n">{data.risk.score}</div>
                   <div className="d">/ 100</div>
-                  <div className="lab">{data.risk.level} risk</div>
+                  <div className="lab" style={{ color: riskColor }}>{data.risk.level} risk</div>
                 </div>
               </div>
               <RiskScoreBadge score={data.risk.score} />
