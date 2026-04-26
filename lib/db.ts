@@ -53,9 +53,6 @@ export async function getDb(): Promise<Db | null> {
     if (AUTO_SEED_ENABLED && !global.__restaurantyAutoSeed) {
       global.__restaurantyAutoSeed = runAutoSeed(db);
     }
-    if (global.__restaurantyAutoSeed) {
-      await global.__restaurantyAutoSeed;
-    }
     return db;
   } catch (error) {
     global.__restaurantyMongoClient = undefined;

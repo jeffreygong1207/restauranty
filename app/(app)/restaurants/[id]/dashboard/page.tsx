@@ -12,7 +12,7 @@ import {
   getRestaurant,
   listAuditLogs,
   listDiners,
-  listReservations,
+  listReservationsByRestaurant,
   listWaitlistCandidates,
 } from "@/lib/repositories/store";
 import { getSessionUser } from "@/lib/services/session";
@@ -71,13 +71,12 @@ export default async function RestaurantOwnerDashboard({
     );
   }
 
-  const [reservations, diners, waitlist, auditLogs] = await Promise.all([
-    listReservations(),
+  const [todays, diners, waitlist, auditLogs] = await Promise.all([
+    listReservationsByRestaurant(restaurant._id),
     listDiners(),
     listWaitlistCandidates(restaurant._id),
     listAuditLogs(restaurant._id),
   ]);
-  const todays = reservations.filter((r) => r.restaurantId === restaurant._id);
   const atRisk = todays.filter((r) => r.riskScore >= 60);
   const recovered = todays.filter((r) => r.status === "recovered");
   const pendingConfirm = todays.filter((r) => r.confirmationStatus === "requested");

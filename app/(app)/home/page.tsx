@@ -9,7 +9,7 @@ import {
   fmtTime,
 } from "@/components/restauranty-core";
 import {
-  listReservations,
+  listReservationsByDiner,
   listRestaurants,
   listWaitlistCandidates,
   listDiners,
@@ -22,8 +22,7 @@ export default async function DinerHomePage() {
   const user = await getSessionUser();
   if (!user) redirect(authLoginUrl("/home"));
 
-  const [reservations, restaurants, waitlist, diners] = await Promise.all([
-    listReservations(),
+  const [restaurants, waitlist, diners] = await Promise.all([
     listRestaurants(),
     listWaitlistCandidates(),
     listDiners(),
@@ -33,7 +32,7 @@ export default async function DinerHomePage() {
     (d) => d.userId === user._id || d.email.toLowerCase() === user.email.toLowerCase(),
   );
   const myReservations = dinerProfile
-    ? reservations.filter((r) => r.dinerId === dinerProfile._id)
+    ? await listReservationsByDiner(dinerProfile._id)
     : [];
   const upcoming = myReservations.filter(
     (r) => !["completed", "cancelled", "no_show"].includes(r.status),

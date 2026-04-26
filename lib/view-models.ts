@@ -61,10 +61,13 @@ export async function dashboardData() {
 }
 
 export async function reservationDetailData(id?: string) {
-  const reservations = await listReservations();
-  const reservation: Reservation | null = id
-    ? await getReservation(id)
-    : reservations[0] ?? null;
+  let reservation: Reservation | null = null;
+  if (id) {
+    reservation = await getReservation(id);
+  } else {
+    const reservations = await listReservations();
+    reservation = reservations[0] ?? null;
+  }
   if (!reservation) return null;
   const [restaurant, diner, policy, auditLogs, agentLogs, agentRuns] = await Promise.all([
     getRestaurant(reservation.restaurantId),

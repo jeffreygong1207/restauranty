@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+export const preferredRegion = ["iad1"];
+
 export const metadata: Metadata = {
   title: "Restauranty - Reservation Recovery",
   description:

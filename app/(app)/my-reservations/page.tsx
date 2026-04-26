@@ -9,7 +9,7 @@ import {
 } from "@/components/restauranty-core";
 import {
   listDiners,
-  listReservations,
+  listReservationsByDiner,
   listRestaurants,
 } from "@/lib/repositories/store";
 import { authLoginUrl, getSessionUser } from "@/lib/services/session";
@@ -24,8 +24,7 @@ export default async function MyReservationsPage({
   const [user, search] = await Promise.all([getSessionUser(), searchParams]);
   if (!user) redirect(authLoginUrl("/my-reservations"));
 
-  const [reservations, restaurants, diners] = await Promise.all([
-    listReservations(),
+  const [restaurants, diners] = await Promise.all([
     listRestaurants(),
     listDiners(),
   ]);
@@ -34,7 +33,7 @@ export default async function MyReservationsPage({
     (d) => d.userId === user._id || d.email.toLowerCase() === user.email.toLowerCase(),
   );
   const myReservations = dinerProfile
-    ? reservations.filter((r) => r.dinerId === dinerProfile._id)
+    ? await listReservationsByDiner(dinerProfile._id)
     : [];
 
   const sorted = [...myReservations].sort((a, b) =>

@@ -72,6 +72,29 @@ async function list<T extends { _id: string }>(name: CollectionName, fallback: T
   return merged;
 }
 
+async function listFiltered<T extends { _id: string }>(
+  name: CollectionName,
+  fallback: T[],
+  filter: Record<string, unknown>,
+  match: (item: T) => boolean,
+): Promise<T[]> {
+  const db = await getDb();
+  if (!db) return fallback.filter(match);
+  const docs = (await db
+    .collection(COLLECTIONS[name])
+    .find(filter)
+    .sort({ createdAt: -1 })
+    .toArray()) as unknown as T[];
+  const fallbackMatches = fallback.filter(match);
+  if (!fallbackMatches.length) return docs;
+  const seen = new Set(docs.map((d) => d._id));
+  const merged = [...docs];
+  for (const item of fallbackMatches) {
+    if (!seen.has(item._id)) merged.push(item);
+  }
+  return merged;
+}
+
 async function findOne<T extends { _id: string }>(
   name: CollectionName,
   fallback: T[],
@@ -153,8 +176,12 @@ export const listRestaurants = cache(async () =>
 );
 
 export async function listRestaurantsByOwner(ownerUserId: string) {
-  const restaurants = await listRestaurants();
-  return restaurants.filter((restaurant) => restaurant.ownerUserId === ownerUserId);
+  return listFiltered<Restaurant>(
+    "restaurants",
+    memory.restaurants,
+    { ownerUserId },
+    (restaurant) => restaurant.ownerUserId === ownerUserId,
+  );
 }
 
 export async function getRestaurantByPlaceId(placeId: string) {
@@ -171,12 +198,22 @@ export async function saveRestaurant(restaurant: Restaurant) {
 }
 
 export async function listRestaurantClaims(filter?: { restaurantId?: string; ownerUserId?: string }) {
-  const claims = await list<RestaurantClaim>("restaurantClaims", memory.restaurantClaims);
-  return claims.filter((claim) => {
-    if (filter?.restaurantId && claim.restaurantId !== filter.restaurantId) return false;
-    if (filter?.ownerUserId && claim.ownerUserId !== filter.ownerUserId) return false;
-    return true;
-  });
+  if (!filter || (!filter.restaurantId && !filter.ownerUserId)) {
+    return list<RestaurantClaim>("restaurantClaims", memory.restaurantClaims);
+  }
+  const mongoFilter: Record<string, unknown> = {};
+  if (filter.restaurantId) mongoFilter.restaurantId = filter.restaurantId;
+  if (filter.ownerUserId) mongoFilter.ownerUserId = filter.ownerUserId;
+  return listFiltered<RestaurantClaim>(
+    "restaurantClaims",
+    memory.restaurantClaims,
+    mongoFilter,
+    (claim) => {
+      if (filter.restaurantId && claim.restaurantId !== filter.restaurantId) return false;
+      if (filter.ownerUserId && claim.ownerUserId !== filter.ownerUserId) return false;
+      return true;
+    },
+  );
 }
 
 export async function saveRestaurantClaim(claim: RestaurantClaim) {
@@ -227,11 +264,34 @@ export async function deleteReservation(_id: string) {
   return remove("reservations", _id);
 }
 
+export async function listReservationsByRestaurant(restaurantId: string) {
+  return listFiltered<Reservation>(
+    "reservations",
+    memory.reservations,
+    { restaurantId },
+    (reservation) => reservation.restaurantId === restaurantId,
+  );
+}
+
+export async function listReservationsByDiner(dinerId: string) {
+  return listFiltered<Reservation>(
+    "reservations",
+    memory.reservations,
+    { dinerId },
+    (reservation) => reservation.dinerId === dinerId,
+  );
+}
+
 export async function listWaitlistCandidates(restaurantId?: string) {
-  const candidates = await list<WaitlistCandidate>("waitlistCandidates", memory.waitlistCandidates);
-  return restaurantId
-    ? candidates.filter((candidate) => candidate.restaurantId === restaurantId)
-    : candidates;
+  if (!restaurantId) {
+    return list<WaitlistCandidate>("waitlistCandidates", memory.waitlistCandidates);
+  }
+  return listFiltered<WaitlistCandidate>(
+    "waitlistCandidates",
+    memory.waitlistCandidates,
+    { restaurantId },
+    (candidate) => candidate.restaurantId === restaurantId,
+  );
 }
 
 export async function saveWaitlistCandidate(candidate: WaitlistCandidate) {
@@ -252,8 +312,13 @@ export async function saveRecoveryRequest(request: RecoveryRequest) {
 }
 
 export async function listAgentRuns(reservationId?: string) {
-  const runs = await list<AgentRun>("agentRuns", memory.agentRuns);
-  return reservationId ? runs.filter((run) => run.reservationId === reservationId) : runs;
+  if (!reservationId) return list<AgentRun>("agentRuns", memory.agentRuns);
+  return listFiltered<AgentRun>(
+    "agentRuns",
+    memory.agentRuns,
+    { reservationId },
+    (run) => run.reservationId === reservationId,
+  );
 }
 
 export async function saveAgentRun(run: AgentRun) {
@@ -261,8 +326,13 @@ export async function saveAgentRun(run: AgentRun) {
 }
 
 export async function listAgentLogs(reservationId?: string) {
-  const logs = await list<AgentLog>("agentLogs", memory.agentLogs);
-  return reservationId ? logs.filter((log) => log.reservationId === reservationId) : logs;
+  if (!reservationId) return list<AgentLog>("agentLogs", memory.agentLogs);
+  return listFiltered<AgentLog>(
+    "agentLogs",
+    memory.agentLogs,
+    { reservationId },
+    (log) => log.reservationId === reservationId,
+  );
 }
 
 export async function saveAgentLog(log: AgentLog) {
@@ -270,8 +340,13 @@ export async function saveAgentLog(log: AgentLog) {
 }
 
 export async function listAuditLogs(entityId?: string) {
-  const logs = await list<AuditLog>("auditLogs", memory.auditLogs);
-  return entityId ? logs.filter((log) => log.entityId === entityId) : logs;
+  if (!entityId) return list<AuditLog>("auditLogs", memory.auditLogs);
+  return listFiltered<AuditLog>(
+    "auditLogs",
+    memory.auditLogs,
+    { entityId },
+    (log) => log.entityId === entityId,
+  );
 }
 
 export async function saveAuditLog(log: AuditLog) {
